@@ -1,0 +1,41 @@
+# Secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+web/frontend/.env
+web/frontend/.env.local
+
+# Runtime / generated data (vector DB, SQLite users, AI cache)
+data/
+*.sqlite3
+*.db
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node / React
+web/frontend/node_modules/
+web/frontend/build/
+npm-debug.log*
+yarn-error.log*
+
+# Textbook binaries and conversion leftovers (keep .md)
+PDFs/**/*.pdf
+PDFs/**/*.txt
+PDFs/**/Chaptors/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.log
