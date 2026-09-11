@@ -98,3 +98,9 @@ class DocumentIngester:
         self.vector_db.clear_collection()
         documents = self.load_md_files()
         self.ingest_documents(documents)
+        try:
+            from src.ai_cache import AiCache
+            cleared = AiCache().clear()
+            print(f"✓ Cleared {cleared} cached AI generations (they used the old chunks)")
+        except Exception as e:
+            print(f"⚠ Could not clear AI cache: {e}")

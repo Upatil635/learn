@@ -12,9 +12,15 @@ from config import Config
 class LLMHandler:
     def __init__(self):
         Config.validate_llm()
-        self.provider = Config.llm_provider()
-        self.model_name = Config.llm_model()
         self._gemini_client = None
+
+    @property
+    def provider(self) -> str:
+        return Config.llm_provider()
+
+    @property
+    def model_name(self) -> str:
+        return Config.llm_model()
 
     def _generate(self, prompt: str, json_mode: bool = False) -> str:
         if self.provider == "gemini":

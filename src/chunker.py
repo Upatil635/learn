@@ -72,30 +72,57 @@ class DocumentChunker:
     @staticmethod
     def _prepare_content(content: str) -> str:
         content = content.replace("\x0c", "\n")
+        if content.startswith("---"):
+            end = content.find("\n---", 3)
+            if end != -1:
+                content = content[end + 4 :]
+        content = re.sub(r"<!--.*?-->", "", content, flags=re.DOTALL)
+        full_text_marker = "## Full textbook text"
+        idx = content.find(full_text_marker)
+        if idx != -1:
+            content = content[idx + len(full_text_marker) :]
+        lesson = re.search(r"^#\s+.+$", content, re.MULTILINE)
+        if lesson:
+            content = content[lesson.start() :]
+        else:
+            boundaries = DocumentChunker._extract_chapter_boundaries(content)
+            if boundaries and boundaries[0][0] > 400:
+                content = content[boundaries[0][0] :]
+            else:
+                head = content[:3500].lower()
+                if any(marker in head for marker in _FRONT_MATTER_MARKERS):
+                    cut = 2500
+                    for start_marker in ("Let's recall", "Let us learn", "Can you recall", "1.1 "):
+                        found = content.find(start_marker)
+                        if found != -1 and found < 12000:
+                            cut = min(cut, found) if cut != 2500 else found
+                            if found >= 400:
+                                content = content[found:]
+                                break
+                    else:
+                        if len(content) > cut:
+                            content = content[cut:]
         content = re.sub(r"\n{4,}", "\n\n\n", content)
-
-        boundaries = DocumentChunker._extract_chapter_boundaries(content)
-        if boundaries and boundaries[0][0] > 400:
-            return content[boundaries[0][0]:]
-
-        head = content[:3500].lower()
-        if any(marker in head for marker in _FRONT_MATTER_MARKERS):
-            cut = 2500
-            for marker in ("Let's recall", "Let us learn", "Can you recall", "1.1 "):
-                idx = content.find(marker)
-                if idx != -1 and idx < 12000:
-                    cut = min(cut, idx) if cut != 2500 else idx
-                    if idx >= 400:
-                        return content[idx:]
-            if len(content) > cut:
-                return content[cut:]
-        return content
+        return content.strip()
 
     @staticmethod
     def _extract_chapter_boundaries(content: str) -> List[Tuple[int, str]]:
         """Extract chapter boundaries and names from content"""
-        boundaries = []
+        h1_boundaries = []
+        for m in re.finditer(r"^#\s+(.+?)\s*$", content, re.MULTILINE):
+            title = m.group(1).strip()
+            lowered = title.lower()
+            if "standard eight" in lowered:
+                continue
+            if lowered.startswith(("about this file", "document metadata", "full textbook")):
+                continue
+            if len(title) < 2 or len(title) > 160:
+                continue
+            h1_boundaries.append((m.start(), title))
+        if h1_boundaries:
+            return h1_boundaries
 
+        boundaries = []
         contents_start = content.find("Contents")
         contents_end = 0
         if contents_start >= 0 and contents_start < 8000:

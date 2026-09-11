@@ -108,3 +108,12 @@ class AiCache:
         to_store["_cached"] = False
         to_store["_cached_at"] = now
         return to_store
+
+    def clear(self, kind: str = None) -> int:
+        with self._connect() as conn:
+            if kind:
+                cur = conn.execute("DELETE FROM ai_generations WHERE kind = ?", (kind,))
+            else:
+                cur = conn.execute("DELETE FROM ai_generations")
+            conn.commit()
+            return cur.rowcount or 0

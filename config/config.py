@@ -53,11 +53,11 @@ class Config:
     @staticmethod
     def llm_model() -> str:
         Config._reload_env()
+        if Config.llm_provider() == "gemini":
+            return _clean_env(os.getenv("GEMINI_MODEL", "")) or "gemini-3.6-flash"
         explicit = _clean_env(os.getenv("LLM_MODEL", ""))
         if explicit:
             return explicit
-        if Config.llm_provider() == "gemini":
-            return _clean_env(os.getenv("GEMINI_MODEL", "")) or "gemini-3.6-flash"
         return "nvidia/nemotron-3-nano-4b"
 
     @staticmethod
@@ -76,8 +76,6 @@ class Config:
     @staticmethod
     def gemini_model() -> str:
         Config._reload_env()
-        if Config.llm_provider() == "gemini":
-            return Config.llm_model()
         return _clean_env(os.getenv("GEMINI_MODEL", "")) or "gemini-3.6-flash"
 
     @staticmethod
